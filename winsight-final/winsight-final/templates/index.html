@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: 'Comfortaa', sans-serif;
+            background-color: rgb(20, 20, 20);
+            background-image: url('../static/background.png');
+            background-repeat: no-repeat;
+            background-size: cover;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .panel {
+            flex: 0.5;
+            background-color: rgba(188, 188, 188, 0.9);
+            padding: 50px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin-top: 175px;
+            max-height: 60vh;
+            transition: background-color 0.3s ease-in-out;
+        }
+
+        .panel:first-child {
+            margin-left: 60px;
+        }
+
+        .panel:last-child {
+            margin-right: 60px;
+        }
+
+        .panel-text {
+            font-size: 20px;
+            color: #f1f1f1;
+            margin-bottom: 100px;
+        }
+
+        .panel-text:first-child {
+            margin-left: 60px;
+        }
+
+        .panel-text:last-child {
+            margin-right: 150px;
+        }
+
+        .panel:hover {
+            background-color: #818181;
+        }
+
+        .content {
+            flex: 3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            margin-top: 40px;
+        }
+
+        img#webcam {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+            margin-top: 5px;
+            width: 850px;
+            object-fit: cover;
+        }
+
+        p {
+            font-size: 16px;
+            color: #000;
+        }
+
+        h1 img {
+            width: 60%;
+            margin-left: -75px;
+        }
+
+        .btn {
+            background: linear-gradient(to bottom, #81ba37, #236f3e);
+            border: none;
+            color: #fffffe;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-transform: none;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: background 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            text-shadow: 1px 1px 0px #000;
+            margin-left: 90px;
+            margin-top: 25px;
+        }
+
+        .btn:hover {
+            background: linear-gradient(to bottom, #33cc33, #00cc00);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        #player_cards {
+            {% if player_turn %}
+                background-color: green;
+            {% endif %}
+        }
+
+        #dealer_cards {
+            {% if not player_turn %}
+                background-color: green;
+            {% endif %}
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="panel">
+            <h3>Dealer:</h3>
+            <h1 id="dealer_cards"></h1>
+            <h3>Player:</h3>
+            <h1 id="player_cards"></h1>
+        </div>
+        <div class="content">
+            <h1><img src="../static/logo.png" alt="Winsight Logo"></h1>
+            <img id="webcam" src="{{ url_for('video_feed_altered') }}" alt="Webcam Stream">
+        </div>
+        <div class="panel">
+            <h3>Bust chance:</h3>
+            <h1 id="bust_percentage"></h1>
+            <h3>Risk assessment:</h3>
+            <h2 id="risk_eval" style="text-align:center"></h2>
+            <h3>Bet multiplier:</h3>
+            <h1 id="multiplier"></h1>
+            <h3>Best move:</h3>
+            <h1 id="move_option"></h1>
+        </div>
+    </div>
+    <div class="container">
+        <div class="panel-text">
+            <h2>Tabled hands:</h2>
+        </div>
+
+        <form action="/end_turn" method="post" onsubmit="submitForm()">
+            <button class="btn">End Turn</button>
+        </form>
+        <form action="/new_round" method="post" onsubmit="submitForm()">
+            <button class="btn">New Round</button>
+        </form>
+        <form action="/reshuffle" method="post" onsubmit="submitForm()">
+            <button class="btn">Reshuffle</button>
+        </form>
+
+        <div class="panel-text">
+            <h2>Your chances:</h2>
+        </div>
+    </div>
+</body>
+<script>
+    const updateFrontend = () => {
+        fetch('/player_cards')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("player_cards").textContent = data;
+            })
+
+        fetch('/dealer_cards')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("dealer_cards").textContent = data;
+            })
+
+        fetch('/bust_percentage')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("bust_percentage").textContent = (data.toFixed(2)) + "%";
+            })
+
+        fetch('/risk_eval')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("risk_eval").textContent = data;
+            })
+
+        fetch('/multiplier')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("multiplier").textContent = "x " + data;
+            })
+
+        fetch('/move_option')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("move_option").textContent = data;
+            })
+
+    };
+
+    function submitForm() {
+        return false;
+    }
+
+    setInterval(updateFrontend, 500); 
+</script>
+
+</html>
